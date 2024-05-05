@@ -1,951 +1,688 @@
 
-<!DOCTYPE html>
-<html lang="en">
+//Program to
 
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transportio - To every direction</title>
+#include<SoftwareSerial.h>
 
-  <!-- 
-    - favicon
-  -->
-  <link rel="shortcut icon" href="./favicon.svg" type="image/svg+xml">
+#include<LiquidCrystal.h>
 
-  <!-- 
-    - custom css link
-  -->
-  <link rel="stylesheet" href="./assets/css/style.css">
 
-  <!--
-    - google font link
-  -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Rubik:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
+SoftwareSerial  Serial1(2,3);     //make RX arduino line is pin 2, make TX arduino line is pin 3.
 
-  <!-- 
-    - preload images
-  -->
-</head>
+SoftwareSerial  gps(10,11);
 
-<body id="top">
+LiquidCrystal lcd(13,12,9,8,7,6);
 
-  <!-- 
-    - #HEADER
-  -->
 
-  <header class="header" data-header>
-    <div class="container">
+boolean No_IP=false;
 
-      <h1>
-        <a href="#" class="logo">Transportio</a>
-      </h1>
+String  IP="";
 
-      <nav class="navbar" data-navbar>
+String webpage="";
 
-        <div class="navbar-top">
-          <a href="#" class="logo">Transportio</a>
+int i=0,k=0;
 
-          <button class="nav-close-btn" aria-label="Clsoe menu" data-nav-toggler>
-            <ion-icon name="close-outline"></ion-icon>
-          </button>
-        </div>
+int  gps_status=0;
 
-        <ul class="navbar-list">
+String  place="<p>1. Name: [ENTER UR NAME] </p>";   
 
-          <li class="navbar-item">
-            <a href="#home" class="navbar-link" data-nav-link>
-              <span>Home</span>
+String num = "<p>2. Vehicle  No: IND001</p>";
 
-              <ion-icon name="chevron-forward"></ion-icon>
-            </a>
-          </li>
+String cordinat="<p>Coordinates:</p>";          
 
-          <li class="navbar-item">
-            <a href="#about" class="navbar-link" data-nav-link>
-              <span>About</span>
+String  latitude=""; 
 
-              <ion-icon name="chevron-forward"></ion-icon>
-            </a>
-          </li>
+String logitude="";                       
 
-          <li class="navbar-item">
-            <a href="#service" class="navbar-link" data-nav-link>
-              <span>Service</span>
+String  gpsString="";
 
-              <ion-icon name="chevron-forward"></ion-icon>
-            </a>
-          </li>
+char *test="$GPGGA";
 
-          <li class="navbar-item">
-            <a href="#blog" class="navbar-link" data-nav-link>
-              <span>Blog</span>
 
-              <ion-icon name="chevron-forward"></ion-icon>
-            </a>
-          </li>
+void setup() 
 
-          <li class="navbar-item">
-            <a href="#" class="navbar-link" data-nav-link>
-              <span>Contact</span>
+{
 
-              <ion-icon name="chevron-forward"></ion-icon>
-            </a>
-          </li>
+  Serial1.begin(9600);
 
-        </ul>
+  Serial.begin(9600);
 
-      </nav>
+  lcd.begin(16,2);  
 
-      <div class="header-contact">
+  lcd.print("Vehicle Monitoring");
 
-        <div>
-          <p class="contact-label">Free Call In U.S.A</p>
+  lcd.setCursor(0,1);
 
-          <a href="tel:12345678910" class="contact-number">1 234 567 8910</a>
-        </div>
+  lcd.print("     System     ");
 
-        <div class="contact-icon">
-          <ion-icon name="call-outline"></ion-icon>
-        </div>
+  delay(2000);
 
-      </div>
+  lcd.clear();
 
-      <button class="nav-open-btn" aria-label="Open menu" data-nav-toggler>
-        <ion-icon name="menu-outline"></ion-icon>
-      </button>
+  lcd.print("Connecting....");
 
-      <div class="overlay" data-nav-toggler data-overlay></div>
+  delay(1000);
 
-    </div>
-  </header>
+  connect_wifi("AT",1000);
 
+  connect_wifi("AT+CWMODE=3",1000);
 
+  connect_wifi("AT+CWQAP",1000);  
 
+  connect_wifi("AT+RST",5000);
 
+  FindIP(5000);
 
-  <main>
-    <article>
+  if(!No_IP)
 
-      <!-- 
-        - #HERO
-      -->
+      {
 
-      <section class="section hero" aria-label="home" id="home"
-        style="background-image: url('./assets/images/hero-banner.jpg')">
-        <div class="container">
+        Serial.println("Connecting  Wifi....");
 
-          <div class="hero-content">
+        connect_wifi("AT+CWJAP=\\"[ENTER UR SSID NAME] \\",\\"[ENTER  THE PASSWORD]\\"",7000);  
+ //AT+CWJAP=”wifi_username”,”wifi_password”
 
-            <h2 class="h1 hero-title">
-              <span class="span">To Every</span> Direction
-            </h2>
+      }
 
-            <p class="hero-text">
-              Track where you are!!
-              EXPLORE AND ENJOY!!
-            </p>
+      else
 
-            <a href="https://www.swiggy.com/" class="btn-outline">TRACK YOUR VEHICLE</a>
+        {
 
-            <img src="./assets/images/hero-shape.png" width="116" height="116" loading="lazy"
-              class="hero-shape shape-1">
+        }
 
-            <img src="./assets/images/hero-shape.png" width="116" height="116" loading="lazy"
-              class="hero-shape shape-2">
+      Serial.println("Wifi  Connected");
 
-          </div>
+      lcd.clear();
 
-        </div>
-      </section>
+      lcd.print("WIFI Connected");
 
+      delay(2000);
 
+      lcd.clear();
 
+      lcd.setCursor(5,0);
 
+      lcd.print("IP");
 
-      <!-- 
-        - #ABOUT
-      -->
+      lcd.setCursor(3,1);
 
-      <section class="section about" id="about" aria-label="about">
-        <div class="container">
+      lcd.print("ADDRESS");  
 
-          <figure class="about-banner img-holder" style="--width: 400; --height: 720;">
-            <img src="./assets/images/about-banner.jpg" width="400" height="720" loading="lazy" alt=""
-              class="img-cover">
+      ip_add();
 
-            <img src="./assets/images/about-shape-1.png" width="260" height="170" loading="lazy" alt=""
-              class="abs-img abs-img-1">
+      delay(2000);
 
-            <img src="./assets/images/about-shape-2.png" width="500" height="500" loading="lazy" alt=""
-              class="abs-img abs-img-2">
-          </figure>
+      connect_wifi("AT+CIPMUX=1",100);
 
-          <div class="about-content">
+      connect_wifi("AT+CIPSERVER=1,80",100);
 
-            <p class="section-subtitle">Why Choose Us</p>
+      Serial1.end();
 
-            <h2 class="h2 section-title">We Are Professional Logistics & cargo Agency</h2>
+      lcd.clear();
 
-            <p class="section-text">
-              Sed ut perspiciatis unde omnis iste natus error volup tatem accusantium dolorem que laudantium, totam
-              inventore.
-            </p>
+      lcd.print("   GPS DATA");
 
-            <ul class="about-list">
+      delay(2000);
 
-              <li class="about-item">
-                <div class="about-icon">
-                  <ion-icon name="chevron-forward"></ion-icon>
-                </div>
+      gps.begin(9600);
 
-                <p class="about-text">
-                  Go beyond logistics, make the world go round and revolutionize business.
-                </p>
-              </li>
+      get_gps();
 
-              <li class="about-item">
-                <div class="about-icon">
-                  <ion-icon name="chevron-forward"></ion-icon>
-                </div>
+      coordinate_display();
 
-                <p class="about-text">
-                  Logistics through innovation, dedication, and technology. ready, set, done.
-                </p>
-              </li>
+      gps.end();
 
-              <li class="about-item">
-                <div class="about-icon">
-                  <ion-icon name="chevron-forward"></ion-icon>
-                </div>
+      Serial1.begin(9600);
 
-                <p class="about-text">
-                  We take pride in serving our customers safely. together with passion.
-                </p>
-              </li>
+}
 
-              <li class="about-item">
-                <div class="about-icon">
-                  <ion-icon name="chevron-forward"></ion-icon>
-                </div>
 
-                <p class="about-text">
-                  Imagination what we can easily see is only a small percentage.
-                </p>
-              </li>
+void loop()  
 
-              <li class="about-item">
-                <div class="about-icon">
-                  <ion-icon name="chevron-forward"></ion-icon>
-                </div>
+{
 
-                <p class="about-text">
-                  Quality never goes out of style. safety, quality, professionalism.
-                </p>
-              </li>
+  k=0;
 
-              <li class="about-item">
-                <div class="about-icon">
-                  <ion-icon name="chevron-forward"></ion-icon>
-                </div>
+  Serial.println("Please Refresh Ur Page");
 
-                <p class="about-text">
-                  The quality shows in every move we make where business lives.
-                </p>
-              </li>
+  while(k<1000)
 
-            </ul>
-            <a href="#" class="btn">Learn More</a>
-          </div>
-        </div>
-      </section>
-      <section class="section service" id="service" aria-label="service">
-        <div class="container">
+  {
 
-          <p class="section-subtitle">All Services</p>
+    k++;
 
-          <h2 class="h2 section-title">Trusted For Our Services</h2>
+   while(Serial1.available())
 
-          <p class="section-text">
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry the standard dummy text ever since
-            the when an
-            printer took.
-          </p>
+   {
 
-          <ul class="service-list grid-list">
+    if(Serial1.find("0,CONNECT"))
 
-            <li>
-              <div class="service-card">
+    {
 
-                <div class="card-icon">
-                  <img src="./assets/images/service-icon-1.png" width="80" height="60" loading="lazy" alt="Truck">
-                </div>
+      Serial1.end();
 
-                <h3 class="h3 card-title">
-                  <span class="span">01</span> Air Freight
-                </h3>
+  gps.begin(9600);
 
-                <p class="card-text">
-                  Our aim is to optimize and improve your supply chain so that we can give you the best service.
-                </p>
+  get_gps();
 
-                <a href="#" class="btn-link">
-                  <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+  gps.end();
 
-                  <span class="span">View Detail</span>
-                </a>
+  Serial1.begin(9600);
 
-              </div>
-            </li>
+  Serial1.flush();
 
-            <li>
-              <div class="service-card">
+      Serial.println("Start Printing");
 
-                <div class="card-icon">
-                  <img src="./assets/images/service-icon-2.png" width="74" height="60" loading="lazy" alt="Ship">
-                </div>
+      Send();
 
-                <h3 class="h3 card-title">
-                  <span class="span">02</span> Road Freight
-                </h3>
+      coordinate_display();
 
-                <p class="card-text">
-                  Our aim is to optimize and improve your supply chain so that we can give you the best service.
-                </p>
+      Serial.println("Done Printing");
 
-                <a href="#" class="btn-link">
-                  <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+      delay(5000);
 
-                  <span class="span">View Detail</span>
-                </a>
+      lcd.clear();
 
-              </div>
-            </li>
+      lcd.print("System Ready");
 
-            <li>
-              <div class="service-card">
+      delay(1000);
 
-                <div class="card-icon">
-                  <img src="./assets/images/service-icon-3.png" width="60" height="60" loading="lazy" alt="Airplane">
-                </div>
+      k=1200;
 
-                <h3 class="h3 card-title">
-                  <span class="span">03</span> Ocean Freight
-                </h3>
+      break;
 
-                <p class="card-text">
-                  Our aim is to optimize and improve your supply chain so that we can give you the best service.
-                </p>
+    }
 
-                <a href="#" class="btn-link">
-                  <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+  }
 
-                  <span class="span">View Detail</span>
-                </a>
+  delay(1);
 
-              </div>
-            </li>
+ }
 
-            <li>
-              <div class="service-card">
+}
 
-                <div class="card-icon">
-                  <img src="./assets/images/service-icon-4.png" width="50" height="60" loading="lazy" alt="Train">
-                </div>
 
-                <h3 class="h3 card-title">
-                  <span class="span">04</span> Rail Freight
-                </h3>
+void FindIP(int t1)
 
-                <p class="card-text">
-                  Our aim is to optimize and improve your supply chain so that we can give you the best service.
-                </p>
+{
 
-                <a href="#" class="btn-link">
-                  <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+  int t2=millis();
 
-                  <span class="span">View Detail</span>
-                </a>
+  while(t2+t1>millis())
 
-              </div>
-            </li>
+  {
 
-            <li>
-              <div class="service-card">
+    while(Serial1.available()>0)
 
-                <div class="card-icon">
-                  <img src="./assets/images/service-icon-5.png" width="63" height="60" loading="lazy" alt="Trolley">
-                </div>
+    {
 
-                <h3 class="h3 card-title">
-                  <span class="span">05</span> Warehousing
-                </h3>
+      if(Serial1.find("WIFI GOT IP"))
 
-                <p class="card-text">
-                  Our aim is to optimize and improve your supply chain so that we can give you the best service.
-                </p>
+      {
 
-                <a href="#" class="btn-link">
-                  <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+        No_IP=true;
 
-                  <span class="span">View Detail</span>
-                </a>
+      }
 
-              </div>
-            </li>
+    }
 
-            <li>
-              <div class="service-card">
+  }
 
-                <div class="card-icon">
-                  <img src="./assets/images/service-icon-6.png" width="46" height="60" loading="lazy" alt="Paper">
-                </div>
+}
 
-                <h3 class="h3 card-title">
-                  <span class="span">06</span> Project Cargo
-                </h3>
 
-                <p class="card-text">
-                  Our aim is to optimize and improve your supply chain so that we can give you the best service.
-                </p>
+void ip_add()
 
-                <a href="#" class="btn-link">
-                  <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+{
 
-                  <span class="span">View Detail</span>
-                </a>
+  IP="";
 
-              </div>
-            </li>
-          </ul>      </div>
-      </section>
-  <section class="section feature" aria-label="feature">
-        <div class="container">
-          <div class="title-wrapper">
-            <div>
-              <p class="section-subtitle">Estimation</p>
-              <h2 class="h2 section-title">Has a wide range of solutions</h2>
-              <p class="section-text">
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry the standard dummy text ever
-                since the when an
-                printer took.
-              </p>
-            </div>
+  char ch=0;
 
-            <a href="#" class="btn">Read More</a>
+  while(1)
 
-          </div>
+  {
 
-          <ul class="feature-list grid-list">
+    Serial1.println("AT+CIFSR");
 
-            <li>
-              <div class="feature-card" style="--card-number: '01'">
+    while(Serial1.available()>0)
 
-                <div class="card-icon">
-                  <img src="./assets/images/feature-icon-1.png" width="72" height="91" alt="">
-                </div>
+    {
 
-                <h3 class="h3 card-title">Solutions and specialized</h3>
+      if(Serial1.find("STAIP,"))
 
-                <p class="card-text">
-                  Our aim is to optimize and improve your supply chain so that we can give you the best service
-                </p>
+      {
 
-                <a href="#" class="card-btn" aria-label="Read more">
-                  <ion-icon name="arrow-forward"></ion-icon>
-                </a>
+        delay(1000);
 
-              </div>
-            </li>
+        Serial.print("IP Address:");
 
-            <li>
-              <div class="feature-card" style="--card-number: '02'">
+        while(Serial1.available()>0)
 
-                <div class="card-icon">
-                  <img src="./assets/images/feature-icon-2.png" width="94" height="94" alt="">
-                </div>
+        {
 
-                <h3 class="h3 card-title">Multiple warehouses</h3>
+          ch=Serial1.read();
 
-                <p class="card-text">
-                  We provide multiple drop off and pickup locations so you don't have to worry. And you should not face
-                  any kind...
-                </p>
+          if(ch=='+')
 
-                <a href="#" class="card-btn" aria-label="Read more">
-                  <ion-icon name="arrow-forward"></ion-icon>
-                </a>
+          break;
 
-              </div>
-            </li>
+          IP+=ch;
 
-            <li>
-              <div class="feature-card" style="--card-number: '03'">
+        }
 
-                <div class="card-icon">
-                  <img src="./assets/images/feature-icon-3.png" width="93" height="93" alt="">
-                </div>
+      }
 
-                <h3 class="h3 card-title">Tracking made easy</h3>
+      if(ch=='+')
 
-                <p class="card-text">
-                  A tracking number for the entire process. so that you can find the exact position. this process will
-                  help you
-                </p>
+      break;
 
-                <a href="#" class="card-btn" aria-label="Read more">
-                  <ion-icon name="arrow-forward"></ion-icon>
-                </a>
+    }
 
-              </div>
-            </li>
+    if(ch=='+')
 
-          </ul>
+    break;
 
-        </div>
-      </section>
+    delay(1000);
 
-      <section class="section project" aria-label="project">
-        <div class="container">
+  }
 
-          <p class="section-subtitle">Projects</p>
+  lcd.clear();
 
-          <h2 class="h2 section-title">Featured Projects</h2>
+  lcd.print(IP);
 
-          <p class="section-text">
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry the standard dummy text ever since
-            the when an
-            printer took.
-          </p>
+  lcd.setCursor(0,1);
 
-          <ul class="project-list">
+  lcd.print("Port: 80");
 
-            <li class="project-item">
-              <div class="project-card">
+  Serial.print(IP);
 
-                <figure class="card-banner img-holder" style="--width: 397; --height: 352;">
-                  <img src="./assets/images/project-1.jpg" width="397" height="352" loading="lazy"
-                    alt="Warehouse inventory" class="img-cover">
-                </figure>
+  Serial.print("Port:");
 
-                <button class="action-btn" aria-label="View image">
-                  <ion-icon name="expand-outline"></ion-icon>
-                </button>
+  Serial.println(80);
 
-                <div class="card-content">
-                  <p class="card-tag">Warehousing , Distrbution</p>
+  delay(1000);
 
-                  <h3 class="h3">
-                    <a href="#" class="card-title">Warehouse inventory</a>
-                  </h3>
+}
 
-                  <a href="#" class="card-link">Read More</a>
-                </div>
 
-              </div>
-            </li>
+void  connect_wifi(String cmd, int t)
 
-            <li class="project-item">
-              <div class="project-card">
+{
 
-                <figure class="card-banner img-holder" style="--width: 397; --height: 352;">
-                  <img src="./assets/images/project-2.jpg" width="397" height="352" loading="lazy"
-                    alt="Warehouse inventory" class="img-cover">
-                </figure>
+  int temp=0,i=0;
 
-                <button class="action-btn" aria-label="View image">
-                  <ion-icon name="expand-outline"></ion-icon>
-                </button>
+  while(1)
 
-                <div class="card-content">
-                  <p class="card-tag">Logistics, Analytics</p>
+  {
 
-                  <h3 class="h3">
-                    <a href="#" class="card-title">Minimize Manufacturing</a>
-                  </h3>
+    Serial.println(cmd);
 
-                  <a href="#" class="card-link">Read More</a>
-                </div>
+    Serial1.println(cmd); 
 
-              </div>
-            </li>
+    while(Serial1.available()>0)
 
-            <li class="project-item">
-              <div class="project-card">
+    {
 
-                <figure class="card-banner img-holder" style="--width: 397; --height: 352;">
-                  <img src="./assets/images/project-3.jpg" width="397" height="352" loading="lazy"
-                    alt="Warehouse inventory" class="img-cover">
-                </figure>
+      if(Serial1.find("OK"))
 
-                <button class="action-btn" aria-label="View image">
-                  <ion-icon name="expand-outline"></ion-icon>
-                </button>
+      {
 
-                <div class="card-content">
-                  <p class="card-tag">Warehousing , Distrbution</p>
+      i=8;
 
-                  <h3 class="h3">
-                    <a href="#" class="card-title">Warehouse inventory</a>
-                  </h3>
+      }
 
-                  <a href="#" class="card-link">Read More</a>
-                </div>
+    }
 
-              </div>
-            </li>
+    delay(t);
 
-            <li class="project-item">
-              <div class="project-card">
+    if(i>5)
 
-                <figure class="card-banner img-holder" style="--width: 397; --height: 352;">
-                  <img src="./assets/images/project-4.jpg" width="397" height="352" loading="lazy"
-                    alt="Warehouse inventory" class="img-cover">
-                </figure>
+    break;
 
-                <button class="action-btn" aria-label="View image">
-                  <ion-icon name="expand-outline"></ion-icon>
-                </button>
+    i++;
 
-                <div class="card-content">
-                  <p class="card-tag">Logistics, Analytics</p>
+  }
 
-                  <h3 class="h3">
-                    <a href="#" class="card-title">Minimize Manufacturing</a>
-                  </h3>
+  if(i==8)
 
-                  <a href="#" class="card-link">Read More</a>
-                </div>
+  {
 
-              </div>
-            </li>
+    Serial.println("OK");
 
-            <li class="project-item">
-              <div class="project-card">
+  }
 
-                <figure class="card-banner img-holder" style="--width: 397; --height: 352;">
-                  <img src="./assets/images/project-5.jpg" width="397" height="352" loading="lazy"
-                    alt="Warehouse inventory" class="img-cover">
-                </figure>
+  else
 
-                <button class="action-btn" aria-label="View image">
-                  <ion-icon name="expand-outline"></ion-icon>
-                </button>
+  {
 
-                <div class="card-content">
-                  <p class="card-tag">Warehousing , Distrbution</p>
+  Serial.println("Error");
 
-                  <h3 class="h3">
-                    <a href="#" class="card-title">Warehouse inventory</a>
-                  </h3>
+  }
 
-                  <a href="#" class="card-link">Read More</a>
-                </div>
+  delay(1000);
 
-              </div>
-            </li>
+}
 
-            <li class="project-item">
-              <div class="project-card">
 
-                <figure class="card-banner img-holder" style="--width: 397; --height: 352;">
-                  <img src="./assets/images/project-6.jpg" width="397" height="352" loading="lazy"
-                    alt="Warehouse inventory" class="img-cover">
-                </figure>
+void gps_Function()
 
-                <button class="action-btn" aria-label="View image">
-                  <ion-icon name="expand-outline"></ion-icon>
-                </button>
+{
 
-                <div class="card-content">
-                  <p class="card-tag">Logistics, Analytics</p>
+  gpsString="";
 
-                  <h3 class="h3">
-                    <a href="#" class="card-title">Minimize Manufacturing</a>
-                  </h3>
+  while(1)
 
-                  <a href="#" class="card-link">Read More</a>
-                </div>
+  {
 
-              </div>
-            </li>
+   while (gps.available()>0)                //Serial  incoming data from GPS
 
-          </ul>
+   {
 
-        </div>
-      </section>
-      <section class="section blog" aria-label="blog" id="blog">
-        <div class="container">
+    char inChar = (char)gps.read();
 
-          <p class="section-subtitle">Our Blogs</p>
+     gpsString+= inChar;                    //store incoming data from GPS to temporary  string str[]
 
-          <h2 class="h2 section-title">Recent news & events</h2>
+     i++;
 
-          <p class="section-text">
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry the standard dummy text ever since
-            the when an
-            printer took.
-          </p>
+     if (i < 7)                      
 
-          <ul class="blog-list grid-list">
+     {
 
-            <li>
-              <div class="blog-card">
+      if(gpsString[i-1] != test[i-1])       //check for right string
 
-                <figure class="card-banner img-holder" style="--width: 770; --height: 500;">
-                  <img src="./assets/images/blog-1.jpg" width="770" height="500" loading="lazy"
-                    alt="At the end of the day, going forward, a new normal that has evolved from. your only logistic partner."
-                    class="img-cover">
-                </figure>
+      {
 
-                <div class="card-content">
+        i=0;
 
-                  <time class="card-meta" datetime="2022-08-02">
-                    <span class="span">02</span> Aug
-                  </time>
+        gpsString="";
 
-                  <h3 class="h3 card-title">
-                    <a href="#">
-                      At the end of the day, going forward, a new normal that has evolved from. your only logistic
-                      partner.
-                    </a>
-                  </h3>
+      }
 
-                  <p class="card-text">
-                    New chip traps clusters of migrating tumor cells asperiortenetur, blanditiis odit. typesetting
-                    industry the standard
-                    dummy text ever since the when an printer.
-                  </p>
+     }
 
-                  <a href="#" class="btn-link">
-                    <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+    if(inChar=='\r')
 
-                    <span class="span">Read More</span>
-                  </a>
+    {
 
-                </div>
+     if(i>65)
 
-              </div>
-            </li>
+     {
 
-            <li>
-              <div class="blog-card">
+       gps_status=1;
 
-                <figure class="card-banner img-holder" style="--width: 770; --height: 500;">
-                  <img src="./assets/images/blog-2.jpg" width="770" height="500" loading="lazy"
-                    alt="Going forward, a new normal that has evolved from generation. moving your products across all borders."
-                    class="img-cover">
-                </figure>
+       break;
 
-                <div class="card-content">
+     }
 
-                  <time class="card-meta" datetime="2022-08-21">
-                    <span class="span">21</span> Aug
-                  </time>
+     else
 
-                  <h3 class="h3 card-title">
-                    <a href="#">
-                      Going forward, a new normal that has evolved from generation. moving your products across all
-                      borders.
-                    </a>
-                  </h3>
+     {
 
-                  <p class="card-text">
-                    New chip traps clusters of migrating tumor cells asperiortenetur, blanditiis odit. typesetting
-                    industry the standard
-                    dummy text ever since the when an printer.
-                  </p>
+       i=0;
 
-                  <a href="#" class="btn-link">
-                    <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+     }
 
-                    <span class="span">Read More</span>
-                  </a>
+    }
 
-                </div>
+  }
 
-              </div>
-            </li>
+   if(gps_status)
 
-          </ul>
+    break;
 
-        </div>
-      </section>
-      <section class="section newsletter" aria-label="newsletter">
-        <div class="container">
+  }
 
-          <figure class="newsletter-banner img-holder">
-            <img src="./assets/images/newsletter-banner.png" width="303" height="381" alt="newsletter banner"
-              class="w-100">
-          </figure>
+}
 
-          <div class="newsletter-content">
 
-            <h2 class="h2 section-title">Subscribe for offers and news</h2>
+void get_gps()
 
-            <form action="" class="newsletter-form">
-              <input type="email" name="email_address" placeholder="Enter Your Email" aria-label="email"
-                class="email-field">
+{
 
-              <button type="submit" class="newsletter-btn">Subscribe Now</button>
-            </form>
+   gps_status=0;
 
-          </div>
+   int x=0;
 
-        </div>
-      </section>
+   while(gps_status==0)
 
-    </article>
-  </main>
-  <footer class="footer">
-    <div class="container">
+   {
 
-      <div class="footer-top section">
+    gps_Function();
 
-        <div class="footer-brand">
+    int str_lenth=i;
 
-          <a href="#" class="logo">Transportio</a>
+    latitude="";
 
-          <p class="footer-text">
-            Many desktop publishing packages and web page editors now use are dolra Ipsum as their default.
-          </p>
+    logitude="";
 
-          <ul class="social-list">
+    coordinate2dec();
 
-            <li>
-              <a href="#" class="social-link">
-                <ion-icon name="logo-facebook"></ion-icon>
-              </a>
-            </li>
+        i=0;x=0;
 
-            <li>
-              <a href="#" class="social-link">
-                <ion-icon name="logo-twitter"></ion-icon>
-              </a>
-            </li>
+    str_lenth=0;
 
-            <li>
-              <a href="#" class="social-link">
-                <ion-icon name="logo-instagram"></ion-icon>
-              </a>
-            </li>
+   }
 
-            <li>
-              <a href="#" class="social-link">
-                <ion-icon name="logo-youtube"></ion-icon>
-              </a>
-            </li>
+}
 
-          </ul>
 
-        </div>
+void  coordinate_display()
 
-        <ul class="footer-list">
+{
 
-          <li>
-            <p class="footer-list-title">Quick Links</p>
-          </li>
+    lcd.clear();
 
-          <li>
-            <a href="#" class="footer-link">About</a>
-          </li>
+    lcd.print("LATITUTE:");
 
-          <li>
-            <a href="#" class="footer-link">Services</a>
-          </li>
+    lcd.print(latitude);
 
-          <li>
-            <a href="#" class="footer-link">Blog</a>
-          </li>
+    lcd.setCursor(0,1);
 
-          <li>
-            <a href="#" class="footer-link">FAQ</a>
-          </li>
+    lcd.print("LONGITUTE:");
 
-          <li>
-            <a href="#" class="footer-link">Contact Us</a>
-          </li>
+    lcd.print(logitude);
 
-        </ul>
+    Serial.print("Latitude:");
 
-        <ul class="footer-list">
+    Serial.println(latitude);
 
-          <li>
-            <p class="footer-list-title">Services</p>
-          </li>
+    Serial.print("Longitude:");
 
-          <li>
-            <a href="#" class="footer-link">Warehouse</a>
-          </li>
+    Serial.println(logitude);
 
-          <li>
-            <a href="#" class="footer-link">Air Freight</a>
-          </li>
+}
 
-          <li>
-            <a href="#" class="footer-link">Ocean Freight</a>
-          </li>
 
-          <li>
-            <a href="#" class="footer-link">Road Freight</a>
-          </li>
+void  coordinate2dec()
 
-          <li>
-            <a href="#" class="footer-link">Packaging</a>
-          </li>
+{
 
-        </ul>
+    
 
-        <ul class="footer-list">
+    String lat_degree="";
 
-          <li>
-            <p class="footer-list-title">Community</p>
-          </li>
+    for(i=18;i<20;i++)          //extract latitude from string
 
-          <li>
-            <a href="#" class="footer-link">Business Consulting</a>
-          </li>
+      lat_degree+=gpsString[i];
 
-          <li>
-            <a href="#" class="footer-link">Testimonials</a>
-          </li>
+    
 
-          <li>
-            <a href="#" class="footer-link">Track Your Shipment</a>
-          </li>
+    String lat_minut="";
 
-          <li>
-            <a href="#" class="footer-link">Privacy Policy</a>
-          </li>
+    for(i=20;i<28;i++)
 
-          <li>
-            <a href="#" class="footer-link">Terms & Condition</a>
-          </li>
-        </ul>
+      lat_minut+=gpsString[i];
 
-      </div>
+    
 
-      <div class="footer-bottom">
-        <p class="copyright">
-          &copy; 2022 Transportio. All Rights Reserved by <a href="#" class="copyright-link">codewithsadee</a>
-        </p>
-      </div>
+    String long_degree="";
 
-    </div>
-  </footer>
-  <a href="#top" class="back-top-btn" aria-label="Back to top" data-back-top-btn>
-    <ion-icon name="chevron-up"></ion-icon>
-  </a>
+    for(i=30;i<33;i++)          //extract  longitude from string
 
-  <script src="./assets/js/script.js" defer></script>
+      long_degree+=gpsString[i];
 
-  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+      
 
-</body>
+    String long_minut="";
 
-</html> 
+    for(i=33;i<41;i++)
+
+      long_minut+=gpsString[i];
+
+      
+
+     float minut= lat_minut.toFloat();
+
+     minut=minut/60;
+
+     float degree=lat_degree.toFloat();
+
+     latitude=degree+minut;
+
+     
+
+     minut= long_minut.toFloat();
+
+     minut=minut/60;
+
+     degree=long_degree.toFloat();
+
+     logitude=degree+minut;
+
+}
+
+
+void  Send()
+
+{
+
+     
+
+      webpage = "<h1>Welcome to Engineers Garage</h1><body  bgcolor=f0f0f0>";
+
+      webpage+=place;
+
+      webpage+=num;
+
+      webpage+=cordinat;
+
+      webpage+="<p>Latitude:";
+
+      webpage+=latitude;
+
+      webpage+="</p>";
+
+      webpage+="<p>Longitude:";
+
+      webpage+=logitude;
+
+      webpage+="</p>";
+
+     webpage+= "<a href=\\"http://maps.google.com/maps?&z=15&mrt=yp&t=k&q=";
+
+     webpage+=latitude;
+
+     webpage+='+';              //28.612953, 77.231545   //28.612953,77.2293563
+
+     webpage+=logitude;
+
+     webpage+="\\">Click  Here for google map</a>";
+
+     webdata();
+
+       webpage="";
+
+     while(1)
+
+     {
+
+      Serial.println("AT+CIPCLOSE=0");
+
+      Serial1.println("AT+CIPCLOSE=0");
+
+      while(Serial1.available())
+
+      {
+
+        if(Serial1.find("0,CLOSE"))
+
+        {
+
+          return;
+
+        }
+
+      }
+
+      delay(500);
+
+      i++;
+
+      if(i>5)
+
+      {
+
+        i=0;
+
+      }
+
+      if(i==0)
+
+      break;
+
+     }
+
+}
+
+
+void webdata()
+
+{
+
+     i=0;
+
+     while(1)
+
+     {
+
+      unsigned int l=webpage.length();
+
+      Serial1.print("AT+CIPSEND=0,");
+
+      Serial1.println(l+2);
+
+      Serial.println(l+2);
+
+      Serial.println(webpage);
+
+      Serial1.println(webpage);
+
+      while(Serial1.available())
+
+      {
+
+        if(Serial1.find("OK"))
+
+        {
+
+         return;
+
+        }
+
+      }
+
+            i++;
+
+      if(i>5)
+
+        i=0;
+
+        if(i==0)
+
+        break;
+
+      delay(200);
+
+     }
+
+}
